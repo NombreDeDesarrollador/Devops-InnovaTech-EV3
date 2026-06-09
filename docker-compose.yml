@@ -1,0 +1,75 @@
+services:
+
+  frontend:
+    image: 905418192378.dkr.ecr.us-east-1.amazonaws.com/innovatech-frontend:latest
+    container_name: frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend-ventas
+      - backend-despachos
+    restart: unless-stopped
+    networks:
+      - frontend-net
+
+  backend-ventas:
+    image: 905418192378.dkr.ecr.us-east-1.amazonaws.com/innovatech-back-ventas:latest
+    container_name: backend-ventas
+    ports:
+      - "8081:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: unless-stopped
+    environment:
+      DB_HOST: mysql
+      DB_PORT: "3306"
+      DB_NAME: ventas_db
+      DB_USERNAME: root
+      DB_PASSWORD: ${MYSQL_ROOT_PASSWORD} # <-- Lee del archivo .env
+    networks:
+      - backend-net
+
+  backend-despachos:
+    image: 905418192378.dkr.ecr.us-east-1.amazonaws.com/innovatech-back-despachos:latest
+    container_name: backend-despachos
+    ports:
+      - "8082:8081"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: unless-stopped
+    environment:
+      DB_HOST: mysql
+      DB_PORT: "3306"
+      DB_NAME: despachos_db
+      DB_USERNAME: root
+      DB_PASSWORD: ${MYSQL_ROOT_PASSWORD} # <-- Lee del archivo .env
+    networks:
+      - backend-net
+
+  mysql:
+    image: mysql:8
+    container_name: mysql-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD} # <-- Lee del archivo .env
+      MYSQL_DATABASE: innovatech
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - backend-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  frontend-net:
+  backend-net:
+
+volumes:
+  mysql-data:
