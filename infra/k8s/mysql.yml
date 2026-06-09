@@ -19,7 +19,7 @@ spec:
             - containerPort: 3306
           env:
             - name: MYSQL_ROOT_PASSWORD
-              value: "root"
+              value: root
           volumeMounts:
             - name: mysql-init-volume
               mountPath: /docker-entrypoint-initdb.d

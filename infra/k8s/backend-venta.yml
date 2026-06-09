@@ -1,40 +1,63 @@
+# ============================================================
+# frontend.yml — CORREGIDO PARA EKS (EV3)
+# Cambios respecto a la versión anterior:
+#   - imagePullPolicy: Always  (descarga desde ECR, no local)
+#   - Service: LoadBalancer → expone URL pública (IE4: acceso por URL pública)
+#   - resources: añadidos para HPA
+# ============================================================
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: backend-ventas
+  name: frontend-despacho
+  labels:
+    app: frontend-despacho
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
-      app: backend-ventas
+      app: frontend-despacho
   template:
     metadata:
       labels:
-        app: backend-ventas
+        app: frontend-despacho
     spec:
       containers:
-        - name: backend-ventas
-          image: backend-ventas:latest
-          imagePullPolicy: Never
+        - name: frontend-despacho
+          image: ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/devops-frontend:latest
+          imagePullPolicy: Always
           ports:
-            - containerPort: 8082
-          env:
-            - name: SPRING_DATASOURCE_URL
-              value: "jdbc:mysql://mysql:3306/ventasdb?useSSL=false&allowPublicKeyRetrieval=true"
-            - name: SPRING_DATASOURCE_USERNAME
-              value: "root"
-            - name: SPRING_DATASOURCE_PASSWORD
-              value: "root"
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "200m"
+              memory: "256Mi"
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 10
 ---
+# Service tipo LoadBalancer: AWS crea automáticamente un Classic/NLB
+# que expone el frontend con una URL pública (hostname de AWS)
 apiVersion: v1
 kind: Service
 metadata:
-  name: backend-ventas
+  name: frontend-despacho
 spec:
-  type: NodePort
+  type: LoadBalancer
   selector:
-    app: backend-ventas
+    app: frontend-despacho
   ports:
-    - port: 8082
-      targetPort: 8082
-      nodePort: 30082
+    - port: 80
+      targetPort: 80
