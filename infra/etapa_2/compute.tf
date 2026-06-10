@@ -18,7 +18,7 @@ resource "aws_instance" "innovatech_server" {
   key_name               = var.key_name
   tags                   = { Name = "EC2-Innovatech-Server" }
 
-  iam_instance_profile   = "LabInstanceProfile"
+  iam_instance_profile = "LabInstanceProfile"
 
   root_block_device {
     volume_size = 20
