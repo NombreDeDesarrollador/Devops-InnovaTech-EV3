@@ -1,0 +1,56 @@
+name: CD - Deploy to EKS
+on:
+  push:
+    branches:
+      - develop # Cambia a tu rama principal
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: us-east-1 # Verifica que sea tu región de AWS Academy
+      CLUSTER_NAME: innovatech-cluster
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Configurar credenciales AWS
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login en Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set ECR URLs
+        run: |
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          echo "BACKEND_ECR=${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/innovatech-backend" >> $GITHUB_ENV
+          echo "FRONTEND_ECR=${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/innovatech-frontend" >> $GITHUB_ENV
+
+      - name: Build & Push Backend
+        run: |
+          docker build -t $BACKEND_ECR:${GITHUB_SHA} ./ruta-a-tu-carpeta-backend
+          docker push $BACKEND_ECR:${GITHUB_SHA}
+
+      - name: Build & Push Frontend
+        run: |
+          docker build -t $FRONTEND_ECR:${GITHUB_SHA} ./ruta-a-tu-carpeta-frontend
+          docker push $FRONTEND_ECR:${GITHUB_SHA}
+      
+      - name: Instalar kubectl
+        uses: azure/setup-kubectl@v4
+        
+      - name: Configurar contexto EKS
+        run: aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
+
+      - name: Aplicar manifiestos de Kubernetes
+        run: kubectl apply -f k8s/
+
+      - name: Actualizar imágenes en EKS
+        run: |
+          kubectl set image deployment/innovatech-backend innovatech-backend=$BACKEND_ECR:${GITHUB_SHA}
+          kubectl set image deployment/innovatech-frontend innovatech-frontend=$FRONTEND_ECR:${GITHUB_SHA}
