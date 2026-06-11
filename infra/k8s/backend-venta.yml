@@ -1,63 +1,73 @@
-# ============================================================
-# frontend.yml — CORREGIDO PARA EKS (EV3)
-# Cambios respecto a la versión anterior:
-#   - imagePullPolicy: Always  (descarga desde ECR, no local)
-#   - Service: LoadBalancer → expone URL pública (IE4: acceso por URL pública)
-#   - resources: añadidos para HPA
-# ============================================================
-
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: frontend-despacho
+  name: innovatech-backend-ventas
   labels:
-    app: frontend-despacho
+    app: innovatech-ventas
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
-      app: frontend-despacho
+      app: innovatech-ventas
   template:
     metadata:
       labels:
-        app: frontend-despacho
+        app: innovatech-ventas
     spec:
       containers:
-        - name: frontend-despacho
-          image: ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/devops-frontend:latest
+        - name: innovatech-ventas
+          image: tu-imagen-ventas-placeholder:latest
           imagePullPolicy: Always
-          ports:
-            - containerPort: 80
           resources:
             requests:
               cpu: "100m"
               memory: "128Mi"
             limits:
-              cpu: "200m"
-              memory: "256Mi"
+              cpu: "500m"
+              memory: "512Mi"
+          ports:
+            - containerPort: 8081
+          env:
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: innovatech-db-secrets
+                  key: db-name
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: innovatech-db-secrets
+                  key: db-user
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: innovatech-db-secrets
+                  key: db-pass
+            - name: DB_PORT
+              value: "3306"
+            - name: DATASOURCE_URL
+              value: jdbc:mysql://mysql:3306/$(DB_NAME)?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
           livenessProbe:
             httpGet:
-              path: /
-              port: 80
-            initialDelaySeconds: 15
-            periodSeconds: 20
+              path: /actuator/health/liveness
+              port: 8081
+            initialDelaySeconds: 40
+            periodSeconds: 10
           readinessProbe:
             httpGet:
-              path: /
-              port: 80
-            initialDelaySeconds: 10
+              path: /actuator/health/readiness
+              port: 8081
+            initialDelaySeconds: 45
             periodSeconds: 10
 ---
-# Service tipo LoadBalancer: AWS crea automáticamente un Classic/NLB
-# que expone el frontend con una URL pública (hostname de AWS)
 apiVersion: v1
 kind: Service
 metadata:
-  name: frontend-despacho
+  name: innovatech-backend-ventas-svc
 spec:
-  type: LoadBalancer
   selector:
-    app: frontend-despacho
+    app: innovatech-ventas
   ports:
-    - port: 80
-      targetPort: 80
+    - port: 8081
+      targetPort: 8081
+  type: ClusterIP

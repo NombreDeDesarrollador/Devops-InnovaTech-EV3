@@ -1,22 +1,37 @@
-variable "aws_region" {
-  description = "Región de AWS"
-  default     = "us-east-1"
+provider "aws" {
+    region = "us-east-1"
 }
 
-variable "instance_type" {
-  description = "Tipo de instancia EC2"
-  default     = "t2.micro"
+data "aws_iam_role" "labrole" {
+  name = "LabRole"
 }
 
-variable "key_name" {
-  description = "Nombre de la llave SSH (vkey) ya creada en AWS"
-  default     = "key_proyecto"
+variable "azs" {
+  type    = list(string)
+  default = ["us-east-1a", "us-east-1b"]
 }
 
-variable "cluster_name" {
-  default = "devops-u2-cluster"
+variable "vpc_cidr" {
+  default = "10.0.0.0/16"
 }
 
-variable "service_name" {
-  default = "app"
+variable "name_cluster" {
+  default = "innovatech-cluster"
+}
+
+variable "name_node" {
+  default = "innovatech-workers"
+  description = "Nombre de nodos"
+}
+
+variable "back_venta_ecr_repo_name" {
+  default = "innovatech-ventas"
+}
+
+variable "back_despacho_ecr_repo_name" {
+  default = "innovatech-despachos"
+}
+
+variable "front_ecr_repo_name" {
+  default = "innovatech-frontend"
 }

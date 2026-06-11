@@ -2,6 +2,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: mysql
+  labels:
+    app: mysql
 spec:
   replicas: 1
   selector:
@@ -19,16 +21,26 @@ spec:
             - containerPort: 3306
           env:
             - name: MYSQL_ROOT_PASSWORD
-              value: root
-          volumeMounts:
-            - name: mysql-init-volume
-              mountPath: /docker-entrypoint-initdb.d
-      volumes:
-        - name: mysql-init-volume
-          configMap:
-            name: mysql-init-config
+              valueFrom:
+                secretKeyRef:
+                  name: innovatech-db-secrets
+                  key: mysql-root-password
+            - name: MYSQL_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: innovatech-db-secrets
+                  key: db-name
+            - name: MYSQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: innovatech-db-secrets
+                  key: db-user
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: innovatech-db-secrets
+                  key: db-pass
 ---
-#servicio del mysql, solo lo pueden ver los backends y no el frontend
 apiVersion: v1
 kind: Service
 metadata:
@@ -38,5 +50,5 @@ spec:
     app: mysql
   ports:
     - port: 3306
-      targetPort: 3306
+          targetPort: 3306
   type: ClusterIP
