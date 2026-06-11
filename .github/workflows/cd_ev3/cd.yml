@@ -2,7 +2,7 @@ name: CD - Deploy to EKS
 on:
   push:
     branches:
-      - main # Cambia a tu rama principal
+      - develop # Cambia a tu rama principal
 jobs:
   deploy:
     runs-on: ubuntu-latest
