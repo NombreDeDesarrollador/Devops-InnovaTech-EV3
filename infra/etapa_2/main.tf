@@ -80,3 +80,7 @@ resource "aws_ecr_repository" "innovatech_frontend_repo" {
     Name = "innovatech-frontend"
   }
 }
+
+
+
+# Comentario de prueba para forzar la ejecución del pipeline en develop
