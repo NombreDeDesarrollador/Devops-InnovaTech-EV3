@@ -1,13 +1,15 @@
 name: CD - Deploy to EKS
+
 on:
   push:
     branches:
-      - develop # Cambia a tu rama principal
+      - main
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
     env:
-      AWS_REGION: us-east-1 # Verifica que sea tu región de AWS Academy
+      AWS_REGION: us-east-1
       CLUSTER_NAME: innovatech-cluster
     steps:
       - name: Checkout repository
@@ -25,32 +27,41 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Set ECR URLs
+      - name: Set ECR URLs y Build/Push
         run: |
           ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-          echo "BACKEND_ECR=${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/innovatech-backend" >> $GITHUB_ENV
-          echo "FRONTEND_ECR=${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/innovatech-frontend" >> $GITHUB_ENV
-
-      - name: Build & Push Backend
-        run: |
-          docker build -t $BACKEND_ECR:${GITHUB_SHA} ./ruta-a-tu-carpeta-backend
-          docker push $BACKEND_ECR:${GITHUB_SHA}
-
-      - name: Build & Push Frontend
-        run: |
-          docker build -t $FRONTEND_ECR:${GITHUB_SHA} ./ruta-a-tu-carpeta-frontend
+          
+          VENTAS_ECR="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/innovatech-ventas"
+          DESPACHOS_ECR="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/innovatech-despachos"
+          FRONTEND_ECR="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/innovatech-frontend"
+          
+          # Build y Push de Ventas
+          docker build -t $VENTAS_ECR:${GITHUB_SHA} ./back-Ventas_SpringBoot/Springboot-API-REST
+          docker push $VENTAS_ECR:${GITHUB_SHA}
+          
+          # Build y Push de Despachos
+          docker build -t $DESPACHOS_ECR:${GITHUB_SHA} ./back-Despachos_SpringBoot/Springboot-API-REST-DESPACHO
+          docker push $DESPACHOS_ECR:${GITHUB_SHA}
+          
+          # Build y Push de Frontend
+          docker build -t $FRONTEND_ECR:${GITHUB_SHA} ./front_despacho
           docker push $FRONTEND_ECR:${GITHUB_SHA}
-      
+          
+          echo "VENTAS_ECR=$VENTAS_ECR" >> $GITHUB_ENV
+          echo "DESPACHOS_ECR=$DESPACHOS_ECR" >> $GITHUB_ENV
+          echo "FRONTEND_ECR=$FRONTEND_ECR" >> $GITHUB_ENV
+
       - name: Instalar kubectl
-        uses: azure/setup-kubectl@v4
+        uses: azure/setup-kubectl@v3
         
       - name: Configurar contexto EKS
         run: aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
 
       - name: Aplicar manifiestos de Kubernetes
-        run: kubectl apply -f k8s/
+        run: kubectl apply -f infra/k8s/
 
       - name: Actualizar imágenes en EKS
         run: |
-          kubectl set image deployment/innovatech-backend innovatech-backend=$BACKEND_ECR:${GITHUB_SHA}
-          kubectl set image deployment/innovatech-frontend innovatech-frontend=$FRONTEND_ECR:${GITHUB_SHA}
+          kubectl set image deployment/innovatech-ventas innovatech-ventas=${{ env.VENTAS_ECR }}:${GITHUB_SHA}
+          kubectl set image deployment/innovatech-despachos innovatech-despachos=${{ env.DESPACHOS_ECR }}:${GITHUB_SHA}
+          kubectl set image deployment/innovatech-frontend innovatech-frontend=${{ env.FRONTEND_ECR }}:${GITHUB_SHA}

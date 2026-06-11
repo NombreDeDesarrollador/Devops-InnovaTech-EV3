@@ -1,37 +1,39 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: frontend-despacho
+  name: innovatech-frontend
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: frontend-despacho
+      app: innovatech-frontend
   template:
     metadata:
       labels:
-        app: frontend-despacho
+        app: innovatech-frontend
     spec:
       containers:
-        - name: frontend-despacho
-          image: frontend-despacho:latest
-          #descargar la imagen localmente no desde dockerHub
-          imagePullPolicy: Never
+        - name: innovatech-frontend
+          image: innovatech-frontend-image:latest
+          imagePullPolicy: Always
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
           ports:
             - containerPort: 80
 ---
-#service
 apiVersion: v1
 kind: Service
 metadata:
-  name: frontend-despacho
+  name: innovatech-frontend-svc
 spec:
   selector:
-    app: frontend-despacho
+    app: innovatech-frontend
   ports:
     - port: 80
       targetPort: 80
-      #puerto expuesto en el nodo de kubernet
-      nodePort: 30080
-  #nodePort expone el servicio fuera de cluster kubernet
-  type: NodePort
+  type: LoadBalancer

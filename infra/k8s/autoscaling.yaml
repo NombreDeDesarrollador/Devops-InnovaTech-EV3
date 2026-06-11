@@ -1,12 +1,31 @@
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: hpa-innovatech-backend
+  name: hpa-innovatech-ventas
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: innovatech-backend
+    name: innovatech-ventas
+  minReplicas: 1
+  maxReplicas: 3
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: hpa-innovatech-despachos
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: innovatech-despachos
   minReplicas: 1
   maxReplicas: 3
   metrics:

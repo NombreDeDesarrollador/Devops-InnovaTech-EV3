@@ -1,9 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: innovatech-backend-despachos
-  labels:
-    app: innovatech-despachos
+  name: innovatech-despachos
 spec:
   replicas: 2
   selector:
@@ -21,13 +19,13 @@ spec:
             - sh
             - -c
             - |
-              until nc -z innovatech-backend-ventas-svc 8081; do
-                echo "Esperando a que el backend de ventas esté listo...";
+              until nc -z innovatech-ventas-svc 8081; do
+                echo "Esperando a la API de Ventas...";
                 sleep 3;
               done;
       containers:
         - name: innovatech-despachos
-          image: tu-imagen-despachos-placeholder:latest
+          image: innovatech-despachos-image:latest
           imagePullPolicy: Always
           resources:
             requests:
@@ -59,24 +57,30 @@ spec:
             - name: DATASOURCE_URL
               value: jdbc:mysql://mysql:3306/$(DB_NAME)?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
             - name: VENTAS_API_URL
-              value: http://innovatech-backend-ventas-svc:8081
+              value: http://innovatech-ventas-svc:8081
+          
+          # --- CONFIGURACIÓN DE HEALTH CHECKS ---
           livenessProbe:
             httpGet:
               path: /actuator/health/liveness
               port: 8082
             initialDelaySeconds: 40
             periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
           readinessProbe:
             httpGet:
               path: /actuator/health/readiness
               port: 8082
             initialDelaySeconds: 45
             periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 2
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: innovatech-backend-despachos-svc
+  name: innovatech-despachos-svc
 spec:
   selector:
     app: innovatech-despachos

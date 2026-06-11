@@ -1,9 +1,10 @@
-name: CI - Build and Test (Ventas, Despachos, Frontend)
+name: CI - Build and Test
 
 on:
   pull_request:
     branches:
       - main
+      - develop
   push:
     branches:
       - develop

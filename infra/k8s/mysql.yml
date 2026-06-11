@@ -1,9 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-init-config
+data:
+  init.sql: |
+    CREATE DATABASE IF NOT EXISTS innovatech_db;
+    CREATE USER IF NOT EXISTS 'innovatech_admin'@'%' IDENTIFIED BY 'AdminPass2026!';
+    GRANT ALL PRIVILEGES ON innovatech_db.* TO 'innovatech_admin'@'%';
+
+    FLUSH PRIVILEGES;
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: mysql
-  labels:
-    app: mysql
 spec:
   replicas: 1
   selector:
@@ -16,7 +26,7 @@ spec:
     spec:
       containers:
         - name: mysql
-          image: mysql:8.0
+          image: mysql:8
           ports:
             - containerPort: 3306
           env:
@@ -25,21 +35,13 @@ spec:
                 secretKeyRef:
                   name: innovatech-db-secrets
                   key: mysql-root-password
-            - name: MYSQL_DATABASE
-              valueFrom:
-                secretKeyRef:
-                  name: innovatech-db-secrets
-                  key: db-name
-            - name: MYSQL_USER
-              valueFrom:
-                secretKeyRef:
-                  name: innovatech-db-secrets
-                  key: db-user
-            - name: MYSQL_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: innovatech-db-secrets
-                  key: db-pass
+          volumeMounts:
+            - name: mysql-init-volume
+              mountPath: /docker-entrypoint-initdb.d
+      volumes:
+        - name: mysql-init-volume
+          configMap:
+            name: mysql-init-config
 ---
 apiVersion: v1
 kind: Service
@@ -50,5 +52,5 @@ spec:
     app: mysql
   ports:
     - port: 3306
-          targetPort: 3306
+      targetPort: 3306
   type: ClusterIP
