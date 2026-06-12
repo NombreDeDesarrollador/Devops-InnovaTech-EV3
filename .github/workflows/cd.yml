@@ -62,6 +62,6 @@ jobs:
 
       - name: Actualizar imágenes en EKS
         run: |
-          kubectl set image deployment/innovatech-ventas innovatech-ventas=${{ env.VENTAS_ECR }}:${GITHUB_SHA}
-          kubectl set image deployment/innovatech-despachos innovatech-despachos=${{ env.DESPACHOS_ECR }}:${GITHUB_SHA}
-          kubectl set image deployment/innovatech-frontend innovatech-frontend=${{ env.FRONTEND_ECR }}:${GITHUB_SHA}
+          kubectl set image deployment/innovatech-ventas innovatech-ventas=$VENTAS_ECR:${GITHUB_SHA}
+          kubectl set image deployment/innovatech-despachos innovatech-despachos=$DESPACHOS_ECR:${GITHUB_SHA}
+          kubectl set image deployment/innovatech-frontend innovatech-frontend=$FRONTEND_ECR:${GITHUB_SHA}
