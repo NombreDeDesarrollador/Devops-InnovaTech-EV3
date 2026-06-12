@@ -1,9 +1,14 @@
 name: CD - Deploy to EKS
-#hols
+#hols quesos
 on:
   push:
     branches:
       - develop
+      - main
+  pull_request:
+    branches:
+      - develop
+      - main
 
 jobs:
   deploy:
