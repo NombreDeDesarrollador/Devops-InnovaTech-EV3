@@ -2,7 +2,7 @@
 resource "aws_security_group" "mysql_sg" {
   name        = "mysql-sg-devops"
   description = "Permitir acceso seguro a MySQL desde los componentes internos de la VPC"
-  vpc_id      = aws_vpc.devops_vpc.id
+  vpc_id      = aws_vpc.innovatech_vpc.id
 
   ingress {
     from_port   = 3306
