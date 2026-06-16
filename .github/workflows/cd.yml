@@ -81,3 +81,21 @@ jobs:
           echo ""
           echo "Autoscaling (HPA):"
           kubectl get hpa
+
+      - name: Mostrar las metricas de los logs
+        run: |
+          echo "=========================================="
+          echo        "despliegue de los logs"
+          echo "=========================================="
+          echo ""
+          echo ""
+          kubectl logs mysql-649c86bb4c-ldkct
+          echo ""
+          echo ""
+          echo "pod del frontend"
+          kubectl logs innovatech-frontend-589944cfbb-qgpbl
+          echo ""
+          echo ""
+          echo "pod de backen-venta"
+          kubectl logs innovatech-ventas-c46959b9-sdx5b
+

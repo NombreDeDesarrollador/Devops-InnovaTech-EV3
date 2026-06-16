@@ -84,13 +84,6 @@ Cada backend implementa `livenessProbe` y `readinessProbe` sobre los endpoints `
 docker compose up -d
 ```
 
-Servicios disponibles:
-
-- **Frontend:** http://localhost:80
-- **Backend Ventas:** http://localhost:8001
-- **Backend Despachos:** http://localhost:8002
-- **MySQL:** puerto 3306
-
 > ⚠️ Configura el archivo `.env` con la variable `MYSQL_ROOT_PASSWORD` antes de levantar los contenedores.
 
 ## 🔐 Variables y Secretos necesarios (GitHub Actions)
@@ -113,8 +106,5 @@ Servicios disponibles:
 ## 👥 Autores
 
 Proyecto desarrollado para la Evaluación 3 del módulo DevOps - InnovaTech.
-
-
-## mati la ppt 2
 
 aws eks update-kubeconfig --region us-east-1 --name innovatech-cluster
