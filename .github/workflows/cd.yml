@@ -89,7 +89,7 @@ jobs:
           echo "=========================================="
           echo ""
           echo ""
-          kubectl logs mysql-649c86bb4c-ldkct
+          
           echo ""
           echo ""
           echo "pod del frontend"
