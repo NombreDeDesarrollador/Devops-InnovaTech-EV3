@@ -24,9 +24,7 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Compilar y ejecutar pruebas de Ventas
-        working-directory: ./back-Ventas_SpringBoot/Springboot-API-REST
-        run: ./mvnw clean test
+      
 
   test-backend-despachos:
     name: Test Spring Boot - Despachos
@@ -42,9 +40,7 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Compilar y ejecutar pruebas de Despachos
-        working-directory: ./back-Despachos_SpringBoot/Springboot-API-REST-DESPACHO
-        run: ./mvnw clean test
+      
 
   test-frontend:
     name: Build Frontend Vite

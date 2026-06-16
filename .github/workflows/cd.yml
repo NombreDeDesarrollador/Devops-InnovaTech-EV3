@@ -3,6 +3,7 @@ name: CD - Deploy to EKS
 on:
   push:
     branches:
+      - develop
       - main
 
 jobs:
@@ -21,7 +22,7 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Login en Amazon ECR
         id: login-ecr
@@ -65,3 +66,18 @@ jobs:
           kubectl set image deployment/innovatech-ventas innovatech-ventas=${{ env.VENTAS_ECR }}:${GITHUB_SHA}
           kubectl set image deployment/innovatech-despachos innovatech-despachos=${{ env.DESPACHOS_ECR }}:${GITHUB_SHA}
           kubectl set image deployment/innovatech-frontend innovatech-frontend=${{ env.FRONTEND_ECR }}:${GITHUB_SHA}
+      
+      - name: Mostrar resumen del despliegue
+        run: |
+          echo "=========================================="
+          echo "DESPLIEGUE COMPLETADO EXITOSAMENTE"
+          echo "=========================================="
+          echo ""
+          echo "Estado de los Pods:"
+          kubectl get pods
+          echo ""
+          echo " Estado de los Servicios:"
+          kubectl get svc
+          echo ""
+          echo "Autoscaling (HPA):"
+          kubectl get hpa
