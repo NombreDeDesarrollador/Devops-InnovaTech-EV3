@@ -108,3 +108,5 @@ docker compose up -d
 Proyecto desarrollado para la Evaluación 3 del módulo DevOps - InnovaTech.
 
 aws eks update-kubeconfig --region us-east-1 --name innovatech-cluster
+
+sipo
