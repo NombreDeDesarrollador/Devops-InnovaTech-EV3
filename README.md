@@ -116,3 +116,4 @@ Proyecto desarrollado para la Evaluación 3 del módulo DevOps - InnovaTech.
 
 
 ## mati la ppt 2
+aws eks update-kubeconfig --region us-east-1 --name innovatech-cluster
