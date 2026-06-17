@@ -25,7 +25,7 @@ spec:
               done;
       containers:
         - name: innovatech-despachos
-          image: 585097602232.dkr.ecr.us-east-1.amazonaws.com/innovatech-back-despachos:latest
+          image: innovatech-despachos-image:latest
           imagePullPolicy: Always
           resources:
             requests:
