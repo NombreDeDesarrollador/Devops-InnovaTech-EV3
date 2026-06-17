@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: innovatech-ventas
-          image: innovatech-ventas-image:latest
+          image: 585097602232.dkr.ecr.us-east-1.amazonaws.com/innovatech-back-ventas:latest
           imagePullPolicy: Always
           resources:
             requests:
