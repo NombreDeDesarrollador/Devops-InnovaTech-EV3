@@ -28,45 +28,62 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Set ECR URLs y Build/Push
+      - name: Obtener Account ID y definir URLs de ECR
         run: |
           ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-          
-          VENTAS_ECR="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/innovatech-ventas"
-          DESPACHOS_ECR="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/innovatech-despachos"
-          FRONTEND_ECR="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/innovatech-frontend"
-          
-          # Build y Push de Ventas
-          docker build -t $VENTAS_ECR:${GITHUB_SHA} ./back-Ventas_SpringBoot/Springboot-API-REST
-          docker push $VENTAS_ECR:${GITHUB_SHA}
-          
-          # Build y Push de Despachos
-          docker build -t $DESPACHOS_ECR:${GITHUB_SHA} ./back-Despachos_SpringBoot/Springboot-API-REST-DESPACHO
-          docker push $DESPACHOS_ECR:${GITHUB_SHA}
-          
-          # Build y Push de Frontend
-          docker build -t $FRONTEND_ECR:${GITHUB_SHA} ./front_despacho
-          docker push $FRONTEND_ECR:${GITHUB_SHA}
-          
-          echo "VENTAS_ECR=$VENTAS_ECR" >> $GITHUB_ENV
-          echo "DESPACHOS_ECR=$DESPACHOS_ECR" >> $GITHUB_ENV
-          echo "FRONTEND_ECR=$FRONTEND_ECR" >> $GITHUB_ENV
+
+          echo "VENTAS_ECR=${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/innovatech-ventas" >> $GITHUB_ENV
+          echo "DESPACHOS_ECR=${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/innovatech-despachos" >> $GITHUB_ENV
+          echo "FRONTEND_ECR=${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/innovatech-frontend" >> $GITHUB_ENV
+
+      - name: Build y Push de Ventas
+        run: |
+          docker build -t ${{ env.VENTAS_ECR }}:${{ github.sha }} ./back-Ventas_SpringBoot/Springboot-API-REST
+          docker push ${{ env.VENTAS_ECR }}:${{ github.sha }}
+
+      - name: Build y Push de Despachos
+        run: |
+          docker build -t ${{ env.DESPACHOS_ECR }}:${{ github.sha }} ./back-Despachos_SpringBoot/Springboot-API-REST-DESPACHO
+          docker push ${{ env.DESPACHOS_ECR }}:${{ github.sha }}
+
+      - name: Build y Push de Frontend
+        run: |
+          docker build -t ${{ env.FRONTEND_ECR }}:${{ github.sha }} ./front_despacho
+          docker push ${{ env.FRONTEND_ECR }}:${{ github.sha }}
 
       - name: Instalar kubectl
         uses: azure/setup-kubectl@v3
-        
+
       - name: Configurar contexto EKS
-        run: aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
+        run: |
+          aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.CLUSTER_NAME }}
 
       - name: Aplicar manifiestos de Kubernetes
-        run: kubectl apply -f infra/k8s/
-
-      - name: Actualizar imágenes en EKS
         run: |
-          kubectl set image deployment/innovatech-ventas innovatech-ventas=${{ env.VENTAS_ECR }}:${GITHUB_SHA}
-          kubectl set image deployment/innovatech-despachos innovatech-despachos=${{ env.DESPACHOS_ECR }}:${GITHUB_SHA}
-          kubectl set image deployment/innovatech-frontend innovatech-frontend=${{ env.FRONTEND_ECR }}:${GITHUB_SHA}
-      
+          kubectl apply -f infra/k8s/secrets.yml
+          kubectl apply -f infra/k8s/mysql.yml
+          kubectl apply -f infra/k8s/backend-venta.yml
+          kubectl apply -f infra/k8s/backend-despacho.yml
+          kubectl apply -f infra/k8s/frontend.yml
+          kubectl apply -f infra/k8s/autoscaling.yaml
+
+      - name: Actualizar imagenes en EKS con el SHA del commit
+        run: |
+          kubectl set image deployment/innovatech-ventas \
+            innovatech-ventas=${{ env.VENTAS_ECR }}:${{ github.sha }}
+
+          kubectl set image deployment/innovatech-despachos \
+            innovatech-despachos=${{ env.DESPACHOS_ECR }}:${{ github.sha }}
+
+          kubectl set image deployment/innovatech-frontend \
+            innovatech-frontend=${{ env.FRONTEND_ECR }}:${{ github.sha }}
+
+      - name: Esperar que los deployments esten listos
+        run: |
+          kubectl rollout status deployment/innovatech-ventas --timeout=300s
+          kubectl rollout status deployment/innovatech-despachos --timeout=300s
+          kubectl rollout status deployment/innovatech-frontend --timeout=300s
+
       - name: Mostrar resumen del despliegue
         run: |
           echo "=========================================="
@@ -76,7 +93,7 @@ jobs:
           echo "Estado de los Pods:"
           kubectl get pods
           echo ""
-          echo " Estado de los Servicios:"
+          echo "Estado de los Servicios:"
           kubectl get svc
           echo ""
           echo "Autoscaling (HPA):"
