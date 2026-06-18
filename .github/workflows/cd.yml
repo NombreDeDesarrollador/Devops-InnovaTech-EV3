@@ -78,12 +78,6 @@ jobs:
           kubectl set image deployment/innovatech-frontend \
             innovatech-frontend=${{ env.FRONTEND_ECR }}:${{ github.sha }}
 
-      - name: Esperar que los deployments esten listos
-        run: |
-          kubectl rollout status deployment/innovatech-ventas --timeout=300s
-          kubectl rollout status deployment/innovatech-despachos --timeout=300s
-          kubectl rollout status deployment/innovatech-frontend --timeout=300s
-
       - name: Mostrar resumen del despliegue
         run: |
           echo "=========================================="
